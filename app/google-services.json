@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "365517538778",
+    "project_id": "call-support-c2d42",
+    "storage_bucket": "call-support-c2d42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:365517538778:android:c73ae221c5567a72f62ce3",
+        "android_client_info": {
+          "package_name": "com.example.call_support"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5-Ey1LNh9cEeWif0LWcBbEi0gYaY0yC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
