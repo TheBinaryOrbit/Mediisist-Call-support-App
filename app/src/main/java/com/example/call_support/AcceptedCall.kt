@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.navigation.NavController
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -25,10 +26,10 @@ fun AcceptedCallsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Back button now navigates to "profile"
+        // Header stays on top
         ScreenHeader(title = "Call Logs", onBackClick = {
-            navController.navigate("profile") {
-                popUpTo("profile") { inclusive = false }
+            navController.navigate("MainScreen/profile") {
+                popUpTo("MainScreen/profile") { inclusive = true }
             }
         })
 
@@ -49,14 +50,13 @@ fun AcceptedCallsScreen(
         } else {
             LazyColumn(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
-                items(acceptedCalls.size) { index ->
-                    AcceptedCallCard(acceptedCalls[index]) {
-                        onCancelCall(acceptedCalls[index])
+                items(acceptedCalls) { call ->
+                    AcceptedCallCard(call) {
+                        onCancelCall(call)
                     }
                 }
             }
@@ -109,31 +109,31 @@ fun AcceptedCallCard(call: CallOverlayData, onCancel: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .height(130.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Name: ${call.name}", style = MaterialTheme.typography.bodyLarge)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text("Address: ${call.address}", style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text("Phone: ${call.phone}", style = MaterialTheme.typography.bodyMedium)
-            }
-            Spacer(modifier = Modifier.width(12.dp))
+            Text("👤 Name: ${call.name}", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("📍 Address: ${call.address}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("📞 Phone: ${call.phone}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = onCancel,
-                modifier = Modifier.height(40.dp)
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .height(36.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
             ) {
                 Text("Cancel")
             }

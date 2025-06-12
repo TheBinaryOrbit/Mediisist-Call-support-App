@@ -1,5 +1,6 @@
 package com.example.call_support
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -20,15 +22,18 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.runtime.snapshots.SnapshotStateList
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    acceptedCalls: List<CallOverlayData>,
+    acceptedCalls: SnapshotStateList<CallOverlayData>,
     onCancelCall: (CallOverlayData) -> Unit
 ) {
     var showAboutDialog by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -83,9 +88,8 @@ fun ProfileScreen(
                 SectionItem(
                     title = "About",
                     icon = Icons.Default.Info,
-                    onArrowClick = { showAboutDialog = true }, // sirf arrow clickable
-                    wholeRowClickable = false,
-                    onClick = null
+                    onArrowClick = { showAboutDialog = true },
+                    wholeRowClickable = false
                 )
             }
 
@@ -110,7 +114,9 @@ fun ProfileScreen(
                     }
                 },
                 title = { Text("About") },
-                text = { Text("🚑 Call Support App\nVersion 1.0.0\nBuilt with ❤️ in Jetpack Compose") }
+                text = {
+                    Text("🚑 Call Support App\nVersion 1.0.0\nBuilt with ❤️ in Jetpack Compose")
+                }
             )
         }
 
@@ -122,6 +128,15 @@ fun ProfileScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         showLogoutConfirm = false
+
+                        // ✅ Set isLogin = false in SharedPreferences
+                        val sharedPref = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+                        sharedPref.edit()
+                            .putBoolean("isLogin", false)
+                            .remove("user_id")
+                            .apply()
+
+                        // 🔁 Navigate to login screen
                         navController.navigate("login") {
                             popUpTo("main") { inclusive = true }
                         }
@@ -174,7 +189,6 @@ fun SectionItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            // .background(Color.White)  // <-- REMOVE THIS line
             .then(
                 if (wholeRowClickable) Modifier.clickable { onClick?.invoke() } else Modifier
             )

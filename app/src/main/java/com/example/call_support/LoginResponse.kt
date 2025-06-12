@@ -8,9 +8,11 @@ data class LoginResponse(
     val customerSupport: CustomerSupport?   // Nested object
 )
 
-data class CustomerSupport(
-    val id: String,
-    val name: String,
-    val phoneNumber: String,
-    val email: String
-)
+//data class Customersupport(
+//    val id: String,
+//    val name: String,
+//    val phoneNumber: String,
+//    val email: String
+//)
+
+

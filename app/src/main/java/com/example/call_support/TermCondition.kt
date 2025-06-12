@@ -41,8 +41,8 @@ fun TermsAndConditionsScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = {
-                    navController.navigate("profile") {
-                        popUpTo("profile") { inclusive = false }
+                    navController.navigate("MainScreen/profile") {
+                        popUpTo("MainScreen/profile") { inclusive = false }
                     }
                 }) {
                     Icon(

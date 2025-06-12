@@ -1,12 +1,12 @@
 package com.example.call_support
 
-import android.app.Activity
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
@@ -15,8 +15,9 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    acceptedCalls: List<CallOverlayData>,
-    onCancelCall: (CallOverlayData) -> Unit
+    acceptedCalls: SnapshotStateList<CallOverlayData>,
+    onCancelCall: (CallOverlayData) -> Unit,
+    initialTab: String = "home"
 ) {
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = false
@@ -29,7 +30,8 @@ fun MainScreen(
         )
     }
 
-    var selectedTab by remember { mutableStateOf("home") }
+    var selectedTab by remember { mutableStateOf(initialTab) }
+
 
     Scaffold(
         bottomBar = {

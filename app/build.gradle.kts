@@ -77,8 +77,12 @@ dependencies {
 
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+    // In build.gradle (app level)
+    implementation ("com.valentinilk.shimmer:compose-shimmer:1.0.5")
 
+    implementation ("androidx.work:work-runtime-ktx:2.7.1")
 
+    implementation ("com.google.firebase:firebase-messaging:23.0.0")
 
 
 
@@ -88,6 +92,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation(libs.play.services.mlkit.text.recognition.common)
 
     // Debug/Test Tools
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")

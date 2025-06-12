@@ -8,7 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,7 +27,7 @@ fun PrivacyPolicyScreen(navController: NavController) {
                     shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 )
                 .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                .padding(bottom = 16.dp) // ⬅️ Increased padding to shift content lower
+                .padding(bottom = 16.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -36,8 +36,8 @@ fun PrivacyPolicyScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = {
-                    navController.navigate("profile") {
-                        popUpTo("profile") { inclusive = false }
+                    navController.navigate("MainScreen/profile") {
+                        popUpTo("MainScreen/profile") { inclusive = true }
                     }
                 }) {
                     Icon(
@@ -46,7 +46,6 @@ fun PrivacyPolicyScreen(navController: NavController) {
                         tint = Color.White
                     )
                 }
-
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -61,12 +60,11 @@ fun PrivacyPolicyScreen(navController: NavController) {
             }
         }
 
-        // Body content with scrollable column for responsiveness
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()) // ⬅️ Makes it scrollable
+                .verticalScroll(rememberScrollState())
         ) {
             Text(
                 text = "Your privacy is important to us...",
@@ -76,7 +74,6 @@ fun PrivacyPolicyScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Example extended content
             repeat(10) {
                 Text(
                     text = "We do not share your data with third parties without your consent.",

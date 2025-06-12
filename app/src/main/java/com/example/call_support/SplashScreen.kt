@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -27,8 +28,8 @@ import com.example.call_support.R
 fun SplashScreen(navController: NavController) {
     val scale = remember { Animatable(0f) }
     val alpha = remember { Animatable(0f) }
+    val context = LocalContext.current // 👈 context chahiye for SharedPreferences
 
-    // Custom font define karo
     val customFont = FontFamily(Font(R.font.lobster_regular))
 
     LaunchedEffect(true) {
@@ -52,11 +53,14 @@ fun SplashScreen(navController: NavController) {
 
         delay(2000)
 
-        val isLoggedIn = isUserLoggedIn()
+        val isLoggedIn = isUserLoggedIn(context)
 
-        navController.navigate(if (isLoggedIn) "home" else "login") {
+        val targetRoute = if (isLoggedIn) "MainScreen/home" else "login"
+        navController.navigate(if (isLoggedIn) "MainScreen/home" else "login") {
             popUpTo("splash") { inclusive = true }
         }
+
+
     }
 
     Box(
@@ -75,17 +79,12 @@ fun SplashScreen(navController: NavController) {
                     .size(200.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
-//            Text(
-//               // text = "Hum Hain Na",
-//                fontSize = 26.sp,
-//                color = Color.Black,
-//                fontFamily = customFont, // 👈 yeh line custom font ke liye
-//                modifier = Modifier.alpha(alpha.value)
-//            )
+            // Optional Text
         }
     }
 }
 
-fun isUserLoggedIn(): Boolean {
-    return false // replace with real logic
+fun isUserLoggedIn(context: android.content.Context): Boolean {
+    val sharedPref = context.getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
+    return sharedPref.getBoolean("isLogin", false)
 }
