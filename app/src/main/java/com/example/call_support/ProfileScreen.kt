@@ -137,9 +137,11 @@ fun ProfileScreen(
                             .apply()
 
                         // 🔁 Navigate to login screen
-                        navController.navigate("login") {
-                            popUpTo("main") { inclusive = true }
+                        navController.navigate("LoginScreen") {
+                            popUpTo(0) { inclusive = true } // Clears entire back stack
+                            launchSingleTop = true
                         }
+
                     }) {
                         Text("Yes", color = Color.Red)
                     }

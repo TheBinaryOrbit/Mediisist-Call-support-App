@@ -210,9 +210,10 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.offline),
+                        painter = painterResource(id = R.drawable.offline2),
                         contentDescription = "Offline Image",
                         modifier = Modifier.padding(bottom = 20.dp)
+                            .size(20.dp)
                     )
                 }
             }
@@ -359,39 +360,28 @@ fun WelcomeHeader(
 
             // ONLINE/OFFLINE TOGGLE OR LOADING
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                when {
-                    isLoading -> {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Switch(
+                        checked = isOnline == true,
+                        onCheckedChange = { newValue ->
+                            onToggleOnline(newValue)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            uncheckedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF43A047),
+                            uncheckedTrackColor = Color(0xFFE53935)
                         )
-                    }
-
-                    isOnline == null -> {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
-                    }
-
-                    else -> {
-                        Switch(
-                            checked = isOnline,
-                            onCheckedChange = { newValue ->
-                                onToggleOnline(newValue)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                uncheckedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF43A047),
-                                uncheckedTrackColor = Color(0xFFE53935)
-                            )
-                        )
-                    }
+                    )
                 }
             }
+
         }
     }
 }
@@ -459,41 +449,7 @@ fun ImageSlider() {
             )
         }
 
-        // Left Arrow
-//        IconButton(
-//            onClick = {
-//                coroutineScope.launch {
-//                    val prev = if (pagerState.currentPage == 0) imageList.lastIndex else pagerState.currentPage - 1
-//                    pagerState.animateScrollToPage(prev)
-//                }
-//            },
-//            modifier = Modifier
-//                .align(Alignment.CenterStart)
-//                .padding(start = 8.dp)
-//                .background(Color.Black.copy(alpha = 0.4f), shape = RoundedCornerShape(50))
-//                .size(36.dp)
-//        ) {
-//            Icon(Icons.Default.ArrowBack, contentDescription = "Previous", tint = Color.White)
-//        }
 
-//        // Right Arrow
-//        IconButton(
-//            onClick = {
-//                coroutineScope.launch {
-//                    val next = (pagerState.currentPage + 1) % imageList.size
-//                    pagerState.animateScrollToPage(next)
-//                }
-//            },
-//            modifier = Modifier
-//                .align(Alignment.CenterEnd)
-//                .padding(end = 8.dp)
-//                .background(Color.Black.copy(alpha = 0.4f), shape = RoundedCornerShape(50))
-//                .size(36.dp)
-//        ) {
-//            Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = Color.White)
-//        }
-
-        // Indicator
         HorizontalPagerIndicator(
             pagerState = pagerState,
             modifier = Modifier
