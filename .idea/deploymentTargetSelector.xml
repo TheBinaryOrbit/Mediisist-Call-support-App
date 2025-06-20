@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="Call_Support.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-09T13:55:51.978200400Z">
+        <DropdownSelection timestamp="2025-06-12T11:36:14.592599200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Md Ayan Hashmi\.android\avd\Pixel_8_API_VanillaIceCream.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Md Ayan Hashmi\.android\avd\Pixel_2_API_29.avd" />
             </handle>
           </Target>
         </DropdownSelection>

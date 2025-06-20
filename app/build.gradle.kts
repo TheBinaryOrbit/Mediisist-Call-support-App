@@ -11,6 +11,7 @@ android {
     namespace = "com.example.call_support"
     compileSdk = 35
 
+
     defaultConfig {
         applicationId = "com.example.call_support"
         minSdk = 26
@@ -118,5 +119,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
 
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    implementation ("com.google.accompanist:accompanist-swiperefresh:0.32.0")
+
 
 }

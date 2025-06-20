@@ -1,8 +1,8 @@
 package com.example.call_support
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -10,43 +10,60 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.platform.LocalContext
+import com.example.call_support.domain.EmergencyCall
+import com.example.call_support.foregroundservice.CallSupportForegroundService
+import com.example.call_support.myui.acceptedcall.AcceptedCallsScreen
+import com.example.call_support.myui.login.LoginScreen
+import com.example.call_support.myui.policy.PrivacyPolicyScreen
+import com.example.call_support.myui.policy.TermsAndConditionsScreen
+import com.example.call_support.myui.profile.MyAccountScreen
+import com.example.call_support.myui.splashscreen.SplashScreen
+import com.example.call_support.service.preference.AppPreferences
 import com.example.call_support.ui.theme.CallSupportTheme
 import com.google.firebase.messaging.FirebaseMessaging
 import mainScreenNavGraph
 
-
 class MainActivity : ComponentActivity() {
 
-    private val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        Log.d("MainActivity", "Notification permission granted: $isGranted")
+    }
+
+    private val callPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.all { it.value }
+        Log.d("MainActivity", "Call permissions all granted: $allGranted")
+    }
+
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (Settings.canDrawOverlays(this)) {
+            Log.d("MainActivity", "Overlay permission granted")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        checkAndRequestAllPermissions()
+
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
-        // ✅ Request notification permission for Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            ).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        }
-
-
-        // ✅ Get Firebase token
+        // Get FCM token
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
@@ -56,96 +73,115 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // ✅ Handle SHOW_OVERLAY action
-        intent?.let {
-            if (it.action == "com.example.call_support.SHOW_OVERLAY") {
-                val name = it.getStringExtra("name") ?: "Unknown"
-                val phone = it.getStringExtra("phone") ?: "0000000000"
-                val serviceIntent = Intent(this, OverlayService::class.java).apply {
-                    putExtra("name", name)
-                    putExtra("phone", phone)
-                }
-                ContextCompat.startForegroundService(this, serviceIntent)
-            }
-        }
-
-        // ✅ Compose UI starts here
         setContent {
             CallSupportTheme {
                 val context = LocalContext.current
-                var hasOverlayPermission by remember {
-                    mutableStateOf(
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                            Settings.canDrawOverlays(context)
-                        else true
+                val navController = rememberNavController()
+
+                // ✅ Accepted calls list (from accepted ride API or mock for now)
+                val acceptedCallsState = remember {
+                    mutableStateListOf(
+                        EmergencyCall(
+                            id = "0",
+                            patientName = "Accepted Caller",
+                            phoneNumber = "0000000000",
+                            address = "Unknown",
+                            latitude = 0.0,
+                            longitude = 0.0,
+                            status = "accepted",
+                            createdAt = "2024-01-01T10:00:00"
+                        )
                     )
                 }
 
-               
-                    val navController = rememberNavController()
-                    val acceptedCallsState = remember {
-                        mutableStateListOf(
-                            CallOverlayData("Accepted Caller", "Unknown", "0000000000")
-                        )
-                    }
+                // Check for deep-link navigation
+                val navigateTo = intent.getStringExtra("navigateTo")
 
-                    NavHost(navController = navController, startDestination = "splash") {
-                        composable("splash") { SplashScreen(navController) }
-                        composable("login") { LoginScreen(navController) }
-                        composable("acceptedCalls") {
-                            AcceptedCallsScreen(
-                                navController = navController,
-                                acceptedCalls = acceptedCallsState,
-                                onCancelCall = { call ->
-                                    acceptedCallsState.removeIf {
-                                        it.name == call.name &&
-                                                it.address == call.address &&
-                                                it.phone == call.phone
-                                    }
-                                }
-                            )
-                        }
-                        composable("myAccount") { MyAccountScreen(navController = navController) }
-                        composable("privacy") { PrivacyPolicyScreen(navController = navController) }
-                        composable("terms") { TermsAndConditionsScreen(navController = navController) }
-
-                        mainScreenNavGraph(
+                NavHost(navController = navController, startDestination = "splash") {
+                    composable("splash") { SplashScreen(navController) }
+                    composable("login") { LoginScreen(navController) }
+                    composable("acceptedCalls") {
+                        AcceptedCallsScreen(
                             navController = navController,
-                            acceptedCalls = acceptedCallsState,
-                            onCancelCall = { call ->
-                                acceptedCallsState.removeIf {
-                                    it.name == call.name &&
-                                            it.address == call.address &&
-                                            it.phone == call.phone
-                                }
-                            }
                         )
                     }
+                    composable("myAccount") { MyAccountScreen(navController = navController) }
+                    composable("privacy") { PrivacyPolicyScreen(navController = navController) }
+                    composable("terms") { TermsAndConditionsScreen(navController = navController) }
 
+                    mainScreenNavGraph(
+                        navController = navController,
+                        acceptedCalls = acceptedCallsState
+                    )
+                }
+
+                LaunchedEffect(navigateTo) {
+                    if (navigateTo == "home") {
+                        navController.navigate("home") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    }
+                }
             }
         }
     }
+
+    private fun checkAndRequestAllPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        val callPermissions = arrayOf(
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_PHONE_STATE
+        )
+
+        val missingCallPermissions = callPermissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingCallPermissions.isNotEmpty()) {
+            callPermissionsLauncher.launch(missingCallPermissions.toTypedArray())
+        }
+
+        if (!Settings.canDrawOverlays(this)) {
+            overlayPermissionLauncher.launch(
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
+            )
+        }
+
+        if (hasMinimumPermissions()) {
+            CallSupportForegroundService.start(this)
+        }
+    }
+
+    private fun hasMinimumPermissions(): Boolean {
+        val hasCallPermission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CALL_PHONE
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasOverlayPermission = Settings.canDrawOverlays(this)
+
+        return hasCallPermission && hasOverlayPermission
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AppPreferences.isAppInForeground = true
+        if (!hasMinimumPermissions()) {
+            checkAndRequestAllPermissions()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AppPreferences.isAppInForeground = false
+    }
 }
-
-//    @Composable
-//    fun RequestOverlayScreen(onGranted: () -> Unit) {
-//        val context = LocalContext.current
-//
-//        LaunchedEffect(Unit) {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-//                !Settings.canDrawOverlays(context)
-//            ) {
-//                val intent = Intent(
-//                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-//                    Uri.parse("package:${context.packageName}")
-//                )
-//                context.startActivity(intent)
-//            } else {
-//                onGranted()
-//            }
-//        }
-//
-//        Text("Requesting overlay permission...")
-//    }
-//    }
-
