@@ -42,6 +42,8 @@ import com.example.call_support.myui.home.InfoRowVertical
 import com.example.call_support.myui.home.getFormattedDate
 import com.example.call_support.myui.home.getFormattedTime
 import com.example.call_support.service.api.ApiClient
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -49,9 +51,7 @@ import kotlinx.coroutines.delay
 
 
 @Composable
-fun AcceptedCallsScreen(
-    navController: NavController
-) {
+fun AcceptedCallsScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: AcceptedCallsViewModel = viewModel(
         factory = viewModelFactory {
@@ -62,6 +62,8 @@ fun AcceptedCallsScreen(
     )
 
     val acceptedCalls by viewModel.acceptedCalls.collectAsState()
+    val isRefreshing by viewModel.isSwipeRefreshing.collectAsState()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
 
     LaunchedEffect(Unit) {
         viewModel.fetchAcceptedCalls()
@@ -72,21 +74,41 @@ fun AcceptedCallsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        ScreenHeader(title = "Call Logs", onBackClick = {
+        ScreenHeader(title = "Call Logs") {
             navController.navigate("MainScreen/profile") {
                 popUpTo("MainScreen/profile") { inclusive = true }
             }
-        })
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        LazyColumn {
-            items(acceptedCalls) { call ->
-                AcceptedCallItem(call = call)
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = { viewModel.refreshWithDelay() }
+        ) {
+            if (acceptedCalls.isEmpty() && !isRefreshing) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No completed ride yet.",
+                        color = Color.Gray,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                LazyColumn {
+                    items(acceptedCalls) { call ->
+                        AcceptedCallItem(call = call)
+                    }
+                }
             }
         }
     }
 }
+
 
 // --------------------- ViewModel Inside ---------------------
 class AcceptedCallsViewModel(application: Application) : AndroidViewModel(application) {
@@ -95,6 +117,17 @@ class AcceptedCallsViewModel(application: Application) : AndroidViewModel(applic
 
     private val _acceptedCalls = MutableStateFlow<List<EmergencyCall>>(emptyList())
     val acceptedCalls: StateFlow<List<EmergencyCall>> = _acceptedCalls
+    private val _isSwipeRefreshing = MutableStateFlow(false)
+    val isSwipeRefreshing: StateFlow<Boolean> = _isSwipeRefreshing
+
+    fun refreshWithDelay() {
+        viewModelScope.launch {
+            _isSwipeRefreshing.value = true
+            delay(1500)
+            fetchAcceptedCalls()
+            _isSwipeRefreshing.value = false
+        }
+    }
 
     fun fetchAcceptedCalls() {
         val sharedPref = context.getSharedPreferences("UserSession", Application.MODE_PRIVATE)
@@ -180,19 +213,36 @@ fun ScreenHeader(title: String, onBackClick: (() -> Unit)? = null) {
 
 
 @Composable
-fun AcceptedCallItem(call: EmergencyCall) {
-    val formattedDate = call.createdAt?.let { getFormattedDate(it) } ?: "N/A"
-    val formattedTime = call.createdAt?.let { getFormattedTime(it) } ?: "N/A"
+fun AcceptedCallItem(call: EmergencyCall?) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // State for loading and feedback
+    // 👇 Show loading message if call is null
+    if (call == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Fetching data...",
+                fontSize = 16.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        return
+    }
+
+    val formattedDate = call.createdAt?.let { getFormattedDate(it) } ?: "N/A"
+    val formattedTime = call.createdAt?.let { getFormattedTime(it) } ?: "N/A"
+
     var isLoading by remember { mutableStateOf(false) }
     var showSuccess by remember { mutableStateOf(false) }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Show success message for 3 seconds
     if (showSuccess) {
         LaunchedEffect(Unit) {
             delay(3000)
@@ -200,7 +250,6 @@ fun AcceptedCallItem(call: EmergencyCall) {
         }
     }
 
-    // Show error message for 3 seconds
     if (showError) {
         LaunchedEffect(Unit) {
             delay(3000)
@@ -213,20 +262,12 @@ fun AcceptedCallItem(call: EmergencyCall) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF8F9FA)
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp,
-            pressedElevation = 2.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Header with status and time
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // 🟠 Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -238,10 +279,7 @@ fun AcceptedCallItem(call: EmergencyCall) {
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = "Time",
@@ -260,7 +298,6 @@ fun AcceptedCallItem(call: EmergencyCall) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Patient Info
             InfoRowVertical(
                 icon = Icons.Default.Person,
                 label = "Patient:",
@@ -270,7 +307,6 @@ fun AcceptedCallItem(call: EmergencyCall) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Phone Info
             InfoRowVertical(
                 icon = Icons.Default.Call,
                 label = "Phone:",
@@ -280,7 +316,6 @@ fun AcceptedCallItem(call: EmergencyCall) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Success/Error messages
             if (showSuccess) {
                 Text(
                     text = "SMS sent successfully!",
@@ -303,73 +338,67 @@ fun AcceptedCallItem(call: EmergencyCall) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Action Buttons Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = {
-                        if (call.id == null) {
-                            errorMessage = "Error: Missing ride ID"
-                            showError = true
-                            return@Button
-                        }
+            Button(
+                onClick = {
+                    if (call.id == null) {
+                        errorMessage = "Error: Missing ride ID"
+                        showError = true
+                        return@Button
+                    }
 
-                        coroutineScope.launch {
-                            isLoading = true
-                            try {
-                                val response = ApiClient.apiService.sendSMS(call.id)
-                                if (response.isSuccessful) {
-                                    showSuccess = true
-                                } else {
-                                    errorMessage = "Failed to send SMS (${response.code()})"
-                                    showError = true
-                                }
-                            } catch (e: Exception) {
-                                errorMessage = "Error: ${e.localizedMessage ?: "Failed to send SMS"}"
+                    coroutineScope.launch {
+                        isLoading = true
+                        try {
+                            val response = ApiClient.apiService.sendSMS(call.id)
+                            if (response.isSuccessful) {
+                                showSuccess = true
+                            } else {
+                                errorMessage = "Failed to send SMS (${response.code()})"
                                 showError = true
-                            } finally {
-                                isLoading = false
                             }
+                        } catch (e: Exception) {
+                            errorMessage = "Error: ${e.localizedMessage ?: "Failed to send SMS"}"
+                            showError = true
+                        } finally {
+                            isLoading = false
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 2.dp,
-                        pressedElevation = 0.dp
-                    ),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(20.dp)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 2.dp,
+                    pressedElevation = 0.dp
+                ),
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Message,
+                            contentDescription = "Send SMS",
+                            modifier = Modifier.size(18.dp)
                         )
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Message,
-                                contentDescription = "Send SMS",
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Send SMS",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Send SMS",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }

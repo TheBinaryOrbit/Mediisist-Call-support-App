@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.icu.text.SimpleDateFormat
+import android.icu.util.TimeZone
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -893,7 +894,11 @@ fun getFormattedDate(createdAt: String?): String {
 fun getFormattedTime(createdAt: String?): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC") // assume server sent UTC
+
         val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        outputFormat.timeZone = TimeZone.getDefault() // your local time
+
         val date = inputFormat.parse(createdAt ?: "")
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {

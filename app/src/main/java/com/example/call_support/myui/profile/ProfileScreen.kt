@@ -117,7 +117,7 @@ fun ProfileScreen(
                 },
                 title = { Text("About") },
                 text = {
-                    Text("🚑 Mediisist Call Support\nVersion 1.0.0\nDeveloped by Binary Orbit ")
+                    Text("Mediisist Call Support\nVersion 1.0.0\nDeveloped by Binary Orbit ")
                 }
             )
         }
