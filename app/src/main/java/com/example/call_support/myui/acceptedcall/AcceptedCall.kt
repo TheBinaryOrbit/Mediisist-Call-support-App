@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -150,7 +151,7 @@ class AcceptedCallsViewModel(application: Application) : AndroidViewModel(applic
                             id = ride.id,
                             patientName = ride.name,
                             phoneNumber = ride.phoneNumber,
-                            address = "",
+                            address = ride.address,
                             latitude = 0.0,
                             longitude = 0.0,
                             status = "accepted",
@@ -313,6 +314,14 @@ fun AcceptedCallItem(call: EmergencyCall?) {
                 value = call.phoneNumber,
                 iconColor = Color(0xFF34A853)
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            InfoRowVertical(
+                icon = Icons.Default.Home,
+                label = "address",
+                value = call.address,
+                iconColor = Color(0xFF04255C)
+            )
+
 
             Spacer(modifier = Modifier.height(8.dp))
 

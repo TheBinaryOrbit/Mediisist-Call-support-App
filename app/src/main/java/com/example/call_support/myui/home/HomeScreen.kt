@@ -666,30 +666,30 @@ fun AcceptedCallItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 // ❌ Decline Button
-                Button(
-                    onClick = onDecline,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF50303), contentColor = Color.White),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Cancel, contentDescription = "Decline", modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Decline")
-                }
+//                Button(
+//                    onClick = onDecline,
+//                    modifier = Modifier.weight(1f),
+//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF50303), contentColor = Color.White),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(Icons.Default.Cancel, contentDescription = "Decline", modifier = Modifier.size(20.dp))
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text("Decline")
+//                }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // ✅ Complete Button
-                Button(
-                    onClick = onComplete,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = Color.White),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.DoneAll, contentDescription = "Complete", modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Complete")
-                }
+//                Button(
+//                    onClick = onComplete,
+//                    modifier = Modifier.weight(1f),
+//                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = Color.White),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(Icons.Default.DoneAll, contentDescription = "Complete", modifier = Modifier.size(20.dp))
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text("Complete")
+//                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

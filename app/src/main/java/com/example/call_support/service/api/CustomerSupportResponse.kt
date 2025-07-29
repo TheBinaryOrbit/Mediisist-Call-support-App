@@ -10,5 +10,6 @@ data class CustomerSupport(
     val name: String,
     val phoneNumber: String,
     val email: String,
+    val imageUrl: String,
     val isOnline: Boolean
 )
